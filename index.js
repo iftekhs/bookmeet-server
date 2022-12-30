@@ -15,10 +15,24 @@ require('dotenv').config();
 app.use(cors());
 app.use(express.json());
 
-// ------------------------------- Authentication ---------------------------------
+// ------------------------------- Routes ---------------------------------
 
 const main = async () => {
   try {
+    // ------------------------------- Users ---------------------------------
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      const savedUser = await User.findOne({ email: user.email });
+      if (savedUser) {
+        return res.send({ acknowledged: false });
+      }
+      user.role = 'user';
+      const result = await User.create(user);
+      res.send(result);
+    });
+    // ------------------------------- Users ---------------------------------
+
+    // ------------------------------- Authentication ---------------------------------
     app.post('/jwt', async (req, res) => {
       const email = req.body.email;
       const user = await User.findOne({ email: email });
@@ -31,10 +45,11 @@ const main = async () => {
   } catch (error) {
     console.log(error);
   }
+  // ------------------------------- Authentication ---------------------------------
 };
 
 main().catch(console.error);
-// ------------------------------- Authentication ---------------------------------
+// ------------------------------- Routes ---------------------------------
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
