@@ -60,6 +60,14 @@ const main = async () => {
       const result = await User.create(user);
       res.send(result);
     });
+
+    app.get('/users/:email', verifyJWT, async (req, res) => {
+      const user = await User.findOne({ email: req.decoded.email });
+      if (user) {
+        return res.send({ role: user.role });
+      }
+      res.status(404).send({ message: 'No user found' });
+    });
     // ------------------------------- Users ---------------------------------
 
     // ------------------------------- Authentication ---------------------------------
