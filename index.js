@@ -39,8 +39,7 @@ const main = async () => {
   const verifyAdmin = async (req, res, next) => {
     const decodedEmail = req.decoded.email;
     const query = { email: decodedEmail };
-    const user = await usersCollection.findOne(query);
-
+    const user = await User.findOne(query);
     if (user?.role !== 'admin') {
       return res.status(403).send({ message: 'forbidden access' });
     }
@@ -61,7 +60,13 @@ const main = async () => {
       res.send(result);
     });
 
-    app.get('/users/:email', verifyJWT, async (req, res) => {
+    app.get('/users/count', verifyJWT, verifyAdmin, async (req, res) => {
+      const totalUsersCount = await User.count({});
+      res.status(200).send({ count: totalUsersCount });
+    });
+
+    app.get('/get/my-role', verifyJWT, async (req, res) => {
+      console.log(req.decoded);
       const user = await User.findOne({ email: req.decoded.email });
       if (user) {
         return res.send({ role: user.role });
