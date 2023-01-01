@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const mongoose = require('mongoose');
 const User = require('./Models/User');
+const { ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 // Initial calls
@@ -59,6 +60,15 @@ const main = async () => {
       const result = await User.create(user);
       res.send(result);
     });
+
+    app.delete('/users/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      console.log(req.params);
+      const query = { _id: ObjectId(req.params.id) };
+      const result = await User.deleteOne(query);
+      console.log(result);
+      res.send(result);
+    });
+
     app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const users = await User.find({ role: 'user' });
       res.send(users);
