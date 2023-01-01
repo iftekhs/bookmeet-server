@@ -59,14 +59,17 @@ const main = async () => {
       const result = await User.create(user);
       res.send(result);
     });
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
+      const users = await User.find({ role: 'user' });
+      res.send(users);
+    });
 
     app.get('/users/count', verifyJWT, verifyAdmin, async (req, res) => {
-      const totalUsersCount = await User.count({});
+      const totalUsersCount = await User.count({ role: 'user' });
       res.status(200).send({ count: totalUsersCount });
     });
 
     app.get('/get/my-role', verifyJWT, async (req, res) => {
-      console.log(req.decoded);
       const user = await User.findOne({ email: req.decoded.email });
       if (user) {
         return res.send({ role: user.role });

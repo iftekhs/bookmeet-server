@@ -3,6 +3,7 @@ const { default: mongoose, Schema } = require('mongoose');
 const userDataSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
+  photoURL: { type: String },
   role: { type: String, required: true },
 });
 
