@@ -106,6 +106,11 @@ const main = async () => {
       }
       res.status(500).send({ message: 'Something went very wrong!' });
     });
+    app.get('/meetings', verifyJWT, async (req, res) => {
+      const email = req.decoded.email;
+      const meetings = await Meeting.find({ userEmail: email });
+      res.send(meetings);
+    });
     // ------------------------------- Meetings ---------------------------------
 
     // ------------------------------- Authentication ---------------------------------
