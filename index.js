@@ -5,6 +5,8 @@ const app = express();
 const mongoose = require('mongoose');
 const User = require('./Models/User');
 const { ObjectId } = require('mongodb');
+const Crypto = require('crypto');
+const Meeting = require('./Models/Meeting');
 const port = process.env.PORT || 5000;
 
 // Initial calls
@@ -86,7 +88,25 @@ const main = async () => {
       }
       res.status(404).send({ message: 'No user found' });
     });
+
     // ------------------------------- Users ---------------------------------
+
+    // ------------------------------- Meetings ---------------------------------
+    app.post('/meetings', verifyJWT, async (req, res) => {
+      const meeting = req.body;
+      if (meeting.slots.length > 0) {
+        meeting.slots.map((slot) => (slot.booked = false));
+      }
+      const currentTime = new Date().getTime().toString();
+      meeting.code = Crypto.createHash('md5').update(currentTime).digest('hex');
+      meeting.userEmail = req.decoded.email;
+      const result = await Meeting.create(meeting);
+      if (result) {
+        return res.status(201).send({ acknowledged: true });
+      }
+      res.status(500).send({ message: 'Something went very wrong!' });
+    });
+    // ------------------------------- Meetings ---------------------------------
 
     // ------------------------------- Authentication ---------------------------------
     app.post('/jwt', async (req, res) => {
