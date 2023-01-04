@@ -3,11 +3,13 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const app = express();
 const mongoose = require('mongoose');
-const User = require('./Models/User');
 const { ObjectId } = require('mongodb');
 const Crypto = require('crypto');
-const Meeting = require('./Models/Meeting');
 const port = process.env.PORT || 5000;
+
+// Models
+const User = require('./Models/User');
+const Meeting = require('./Models/Meeting');
 
 // Initial calls
 mongoose.set('strictQuery', false);
@@ -106,10 +108,17 @@ const main = async () => {
       }
       res.status(500).send({ message: 'Something went very wrong!' });
     });
+
     app.get('/meetings', verifyJWT, async (req, res) => {
       const email = req.decoded.email;
       const meetings = await Meeting.find({ userEmail: email });
       res.send(meetings);
+    });
+
+    app.delete('/meetings/:id', verifyJWT, async (req, res) => {
+      const query = { _id: ObjectId(req.params.id), userEmail: req.decoded.email };
+      const result = await Meeting.deleteOne(query);
+      res.send(result);
     });
     // ------------------------------- Meetings ---------------------------------
 
