@@ -97,7 +97,7 @@ const main = async () => {
     app.post('/meetings', verifyJWT, async (req, res) => {
       const meeting = req.body;
       if (meeting.slots.length > 0) {
-        meeting.slots.map((slot) => (slot.booked = false));
+        meeting.slots.map((slot) => (slot.booked = []));
       }
       const currentTime = new Date().getTime().toString();
       meeting.code = Crypto.createHash('md5').update(currentTime).digest('hex');
@@ -113,6 +113,22 @@ const main = async () => {
       const email = req.decoded.email;
       const meetings = await Meeting.find({ userEmail: email });
       res.send(meetings);
+    });
+
+    app.get('/meeting/:code', verifyJWT, async (req, res) => {
+      const meeting = await Meeting.findOne({ code: req.params.code });
+      res.send(meeting);
+    });
+
+    app.get('/meeting/:id/slots/:date', verifyJWT, async (req, res) => {
+      const meeting = await Meeting.findOne({ _id: ObjectId(req.params.id) });
+      const slots = meeting.slots
+        .filter((slot) => !slot.booked.includes(req.params.date))
+        .map((slot) => {
+          delete slot.booked;
+          return slot;
+        });
+      res.send(slots);
     });
 
     app.delete('/meetings/:id', verifyJWT, async (req, res) => {
