@@ -10,6 +10,7 @@ const port = process.env.PORT || 5000;
 // Models
 const User = require('./Models/User');
 const Meeting = require('./Models/Meeting');
+const Booking = require('./Models/Booking');
 
 // Initial calls
 mongoose.set('strictQuery', false);
@@ -137,6 +138,36 @@ const main = async () => {
       res.send(result);
     });
     // ------------------------------- Meetings ---------------------------------
+    // userEmail
+    // slot
+    // ------------------------------- Bookings ---------------------------------
+    app.post('/bookings', verifyJWT, async (req, res) => {
+      const booking = req.body;
+      const meeting = await Meeting.findOne({ _id: ObjectId(booking.meetingId) });
+
+      if (!meeting) {
+        return res.status(400).send({ message: 'No meeting found' });
+      }
+
+      const selectedslot = meeting.slots[booking.slot];
+
+      if (!selectedslot || selectedslot.booked.includes(booking.date)) {
+        return res.status(400).send({ message: 'Invalid Slot Selected' });
+      }
+      selectedslot.booked.push(booking.date + '');
+      meeting.slots[booking.slot] = selectedslot;
+      if (meeting.save()) {
+        booking.userEmail = req.decoded.email;
+        booking.slot = { startTime: selectedslot.startTime, endTime: selectedslot.endTime };
+        const result = await Booking.create(booking);
+        if (result) {
+          return res.status(201).send({ acknowledged: true });
+        }
+      } else {
+        res.status(500).send({ message: 'Something went very wrong!' });
+      }
+    });
+    // ------------------------------- Bookings ---------------------------------
 
     // ------------------------------- Authentication ---------------------------------
     app.post('/jwt', async (req, res) => {
