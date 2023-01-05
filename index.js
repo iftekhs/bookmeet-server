@@ -168,6 +168,12 @@ const main = async () => {
         res.status(500).send({ message: 'Something went very wrong!' });
       }
     });
+
+    app.get('/bookings', verifyJWT, async (req, res) => {
+      const email = req.decoded.email;
+      const bookings = await Booking.find({ userEmail: email });
+      res.send(bookings);
+    });
     // ------------------------------- Bookings ---------------------------------
 
     // ------------------------------- Authentication ---------------------------------
