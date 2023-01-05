@@ -116,6 +116,11 @@ const main = async () => {
       res.send(meetings);
     });
 
+    app.get('/meetings/:id', verifyJWT, async (req, res) => {
+      const meeting = await Meeting.findOne({ _id: ObjectId(req.params.id) });
+      res.send(meeting);
+    });
+
     app.get('/meeting/:code', verifyJWT, async (req, res) => {
       const meeting = await Meeting.findOne({ code: req.params.code });
       res.send(meeting);
