@@ -159,6 +159,7 @@ const main = async () => {
       if (meeting.save()) {
         booking.userEmail = req.decoded.email;
         booking.slot = { startTime: selectedslot.startTime, endTime: selectedslot.endTime };
+        booking.createdAt = new Date();
         const result = await Booking.create(booking);
         if (result) {
           return res.status(201).send({ acknowledged: true });
