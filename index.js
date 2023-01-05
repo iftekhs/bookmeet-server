@@ -140,6 +140,9 @@ const main = async () => {
     app.delete('/meetings/:id', verifyJWT, async (req, res) => {
       const query = { _id: ObjectId(req.params.id), userEmail: req.decoded.email };
       const result = await Meeting.deleteOne(query);
+      if (result) {
+        await Booking.deleteMany({ meetingId: req.params.id });
+      }
       res.send(result);
     });
     // ------------------------------- Meetings ---------------------------------
