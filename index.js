@@ -182,6 +182,11 @@ const main = async () => {
       const bookings = await Booking.find({ userEmail: email });
       res.send(bookings);
     });
+    app.delete('/bookings/:id', verifyJWT, async (req, res) => {
+      const query = { _id: ObjectId(req.params.id), userEmail: req.decoded.email };
+      const result = await Booking.deleteOne(query);
+      res.send(result);
+    });
     // ------------------------------- Bookings ---------------------------------
 
     // ------------------------------- Authentication ---------------------------------
