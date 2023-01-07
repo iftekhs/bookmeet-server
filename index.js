@@ -205,8 +205,44 @@ const main = async () => {
 
     app.delete('/bookings/:id', verifyJWT, async (req, res) => {
       const query = { _id: ObjectId(req.params.id), userEmail: req.decoded.email };
-      const result = await Booking.deleteOne(query);
-      res.send(result);
+      const booking = await Booking.findOne(query);
+      const meetingId = booking.meetingId;
+      if (booking.delete()) {
+        const meeting = await Meeting.findOne({ _id: ObjectId(meetingId) });
+        const filteredBooks = meeting.booked.filter(
+          (book) =>
+            book !== booking.date + '--' + booking.slot.startTime + '--' + booking.slot.endTime
+        );
+        meeting.booked = filteredBooks;
+        meeting.save();
+
+        return res.send({ acknowledged: true });
+      }
+      res.status(500).send({ message: 'Something went very wrong!' });
+    });
+
+    app.delete('/meeting/booking/:id', verifyJWT, async (req, res) => {
+      const booking = await Booking.findOne({ _id: ObjectId(req.params.id) });
+      const meeting = await Meeting.findOne({
+        _id: ObjectId(booking.meetingId),
+        userEmail: req.decoded.email,
+      });
+
+      if (!meeting) {
+        return res.status(404).send({ message: 'No meeting found' });
+      }
+
+      if (booking.delete()) {
+        const filteredBooks = meeting.booked.filter(
+          (book) =>
+            book !== booking.date + '--' + booking.slot.startTime + '--' + booking.slot.endTime
+        );
+        meeting.booked = filteredBooks;
+        meeting.save();
+
+        return res.send({ acknowledged: true });
+      }
+      res.status(500).send({ message: 'Something went very wrong!' });
     });
     // ------------------------------- Bookings ---------------------------------
 
