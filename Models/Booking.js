@@ -13,3 +13,8 @@ const bookingDataSchema = new Schema(
 const Booking = mongoose.model('Booking', bookingDataSchema);
 
 module.exports = Booking;
+
+// .map((slot) => {
+//     delete slot.booked;
+//     return slot;
+//   });

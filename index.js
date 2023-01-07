@@ -67,10 +67,8 @@ const main = async () => {
     });
 
     app.delete('/users/:id', verifyJWT, verifyAdmin, async (req, res) => {
-      console.log(req.params);
       const query = { _id: ObjectId(req.params.id) };
       const result = await User.deleteOne(query);
-      console.log(result);
       res.send(result);
     });
 
@@ -98,7 +96,12 @@ const main = async () => {
     app.post('/meetings', verifyJWT, async (req, res) => {
       const meeting = req.body;
       if (meeting.slots.length > 0) {
-        meeting.slots.map((slot) => (slot.booked = []));
+        meeting.slots.map(
+          (slot, index) =>
+            (slot._id = Crypto.createHash('md5')
+              .update(index + '')
+              .digest('hex'))
+        );
       }
       const currentTime = new Date().getTime().toString();
       meeting.code = Crypto.createHash('md5').update(currentTime).digest('hex');
@@ -128,12 +131,14 @@ const main = async () => {
 
     app.get('/meeting/:id/slots/:date', verifyJWT, async (req, res) => {
       const meeting = await Meeting.findOne({ _id: ObjectId(req.params.id) });
-      const slots = meeting.slots
-        .filter((slot) => !slot.booked.includes(req.params.date))
-        .map((slot) => {
-          delete slot.booked;
+      const slots = meeting.slots.filter((slot) => {
+        if (
+          !meeting.booked.includes(req.params.date + '--' + slot.startTime + '--' + slot.endTime)
+        ) {
           return slot;
-        });
+        }
+      });
+
       res.send(slots);
     });
 
@@ -157,13 +162,17 @@ const main = async () => {
         return res.status(400).send({ message: 'No meeting found' });
       }
 
-      const selectedslot = meeting.slots[booking.slot];
+      const selectedslot = meeting.slots.find((slot) => slot._id === booking.slot);
 
-      if (!selectedslot || selectedslot.booked.includes(booking.date)) {
+      const bookingDateAndSlot =
+        booking.date + '--' + selectedslot.startTime + '--' + selectedslot.endTime;
+
+      if (!selectedslot || meeting.booked.includes(bookingDateAndSlot)) {
         return res.status(400).send({ message: 'Invalid Slot Selected' });
       }
-      selectedslot.booked.push(booking.date + '');
-      meeting.slots[booking.slot] = selectedslot;
+
+      meeting.booked = [...meeting.booked, bookingDateAndSlot];
+
       if (meeting.save()) {
         booking.userEmail = req.decoded.email;
         booking.slot = { startTime: selectedslot.startTime, endTime: selectedslot.endTime };
@@ -182,6 +191,18 @@ const main = async () => {
       const bookings = await Booking.find({ userEmail: email });
       res.send(bookings);
     });
+
+    app.get('/meeting/:id/bookings', verifyJWT, async (req, res) => {
+      const email = req.decoded.email;
+      const meeting = await Meeting.findOne({ _id: ObjectId(req.params.id), userEmail: email });
+      if (meeting) {
+        const bookings = await Booking.find({ meetingId: meeting._id });
+        res.send(bookings);
+      } else {
+        res.send({ message: 'No meeting found' });
+      }
+    });
+
     app.delete('/bookings/:id', verifyJWT, async (req, res) => {
       const query = { _id: ObjectId(req.params.id), userEmail: req.decoded.email };
       const result = await Booking.deleteOne(query);

@@ -8,6 +8,7 @@ const meetingDataSchema = new Schema({
   endDate: { type: String, required: false },
   futureDates: { type: Boolean, required: true },
   slots: { type: Array, require: true },
+  booked: { type: Array, require: true },
   code: { type: String, required: true },
   userEmail: { type: String, require: true },
 });
