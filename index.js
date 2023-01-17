@@ -6,15 +6,16 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 const Crypto = require('crypto');
 const port = process.env.PORT || 5000;
-
+require('dotenv').config();
 // Models
 const User = require('./Models/User');
 const Meeting = require('./Models/Meeting');
 const Booking = require('./Models/Booking');
 
 // Initial calls
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.g2un3jn.mongodb.net/BookMeet?retryWrites=true&w=majority`;
 mongoose.set('strictQuery', false);
-mongoose.connect('mongodb://127.0.0.1:27017/BookMeet');
+mongoose.connect(uri);
 require('dotenv').config();
 
 // middlewares
